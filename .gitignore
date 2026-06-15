@@ -4,9 +4,7 @@ node_modules/
 .pnp.js
 
 # Environment
-.env
-.env.local
-.env.*.local
+.env*
 
 # Build output
 dist/
@@ -20,11 +18,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# IDE
+# IDE (shared team config: add !.vscode/launch.json etc. as needed)
 .vscode/
 .idea/
-*.swp
-*.swo
 
 # OS
 .DS_Store
@@ -41,3 +37,12 @@ uploads/*
 # Temp
 tmp/
 temp/
+
+# CSV data
+backend/csv_data/
+
+# Test coverage (if added later)
+coverage/
+
+# TypeScript build info (if added later)
+*.tsbuildinfo
