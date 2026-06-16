@@ -12,6 +12,12 @@
                 <router-link to="/statistics" class="nav-item" active-class="active">
                     <span class="nav-icon">📈</span>数据统计
                 </router-link>
+                <router-link to="/alarms" class="nav-item alarm-nav" active-class="active">
+                    <span class="nav-icon">🚨</span>报警记录
+                    <span v-if="unhandledAlarmCount > 0" class="alarm-badge">
+                        {{ unhandledAlarmCount > 99 ? '99+' : unhandledAlarmCount }}
+                    </span>
+                </router-link>
             </nav>
             <div class="header-right">
                 <span class="current-time">{{ currentTime }}</span>
@@ -25,9 +31,12 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import axios from './utils/request'
 
 const currentTime = ref('')
-let timer = null
+const unhandledAlarmCount = ref(0)
+let timeTimer = null
+let alarmTimer = null
 
 const updateTime = () => {
     const now = new Date()
@@ -41,13 +50,27 @@ const updateTime = () => {
     })
 }
 
+const loadUnhandledAlarmCount = async () => {
+    try {
+        const res = await axios.get('/alarms/summary')
+        if (res.code === 200) {
+            unhandledAlarmCount.value = res.data.unhandled || 0
+        }
+    } catch (err) {
+        console.error('加载未处理报警数失败:', err)
+    }
+}
+
 onMounted(() => {
     updateTime()
-    timer = setInterval(updateTime, 1000)
+    loadUnhandledAlarmCount()
+    timeTimer = setInterval(updateTime, 1000)
+    alarmTimer = setInterval(loadUnhandledAlarmCount, 10000)
 })
 
 onUnmounted(() => {
-    if (timer) clearInterval(timer)
+    if (timeTimer) clearInterval(timeTimer)
+    if (alarmTimer) clearInterval(alarmTimer)
 })
 </script>
 
@@ -153,5 +176,33 @@ body {
     flex: 1;
     padding: 20px;
     overflow: auto;
+}
+
+.alarm-nav {
+    position: relative;
+}
+
+.alarm-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    background: #ff4d4f;
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(255, 77, 79, 0.6);
+    animation: badgePulse 1.5s infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
 }
 </style>

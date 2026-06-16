@@ -71,6 +71,18 @@ async function runAllTests() {
         console.log('\n--- CSV 数据管理接口测试 ---\n');
         results.push(await testAPI('/api/generate-csv', 'POST'));
 
+        console.log('\n--- 报警记录接口测试 ---\n');
+        results.push(await testAPI('/api/alarms/summary'));
+        results.push(await testAPI('/api/alarms'));
+        results.push(await testAPI('/api/alarms?workingFaceId=1&sensorType=gas&status=0&page=1&pageSize=5'));
+
+        const summaryRes = await testAPI('/api/alarms');
+        if (summaryRes.status === 200 && summaryRes.data.code === 200 && summaryRes.data.data.list && summaryRes.data.data.list.length > 0) {
+            const firstAlarmId = summaryRes.data.data.list[0].id;
+            console.log(`\n--- 测试单条处理: ID=${firstAlarmId} ---\n`);
+            results.push(await testAPI(`/api/alarms/${firstAlarmId}/handle`, 'PUT', { handleBy: '测试人员', handleRemark: '测试处理备注' }));
+        }
+
         console.log('\n========================================');
         console.log('  测试结果汇总');
         console.log('========================================\n');
