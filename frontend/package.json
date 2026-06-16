@@ -10,13 +10,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "axios": "^1.6.2",
+    "echarts": "^5.4.3",
+    "element-plus": "^2.4.4",
+    "moment": "^2.30.1",
+    "socket.io-client": "^4.7.2",
     "vue": "^3.3.11",
     "vue-router": "^4.2.5",
-    "echarts": "^5.4.3",
-    "axios": "^1.6.2",
-    "socket.io-client": "^4.7.2",
-    "ws": "^8.14.2",
-    "element-plus": "^2.4.4"
+    "ws": "^8.14.2"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.5.2",

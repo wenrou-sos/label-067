@@ -12,6 +12,9 @@
                 <router-link to="/statistics" class="nav-item" active-class="active">
                     <span class="nav-icon">📈</span>数据统计
                 </router-link>
+                <router-link to="/daily-report" class="nav-item" active-class="active">
+                    <span class="nav-icon">📋</span>安全生产日报
+                </router-link>
                 <router-link to="/alarms" class="nav-item alarm-nav" active-class="active">
                     <span class="nav-icon">🚨</span>报警记录
                     <span v-if="unhandledAlarmCount > 0" class="alarm-badge">

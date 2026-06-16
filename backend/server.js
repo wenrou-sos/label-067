@@ -3,8 +3,19 @@ const http = require('http');
 const WebSocket = require('ws');
 const cors = require('cors');
 const moment = require('moment');
+const path = require('path');
+const fs = require('fs');
 const db = require('./db');
 const { readRealTimeData, saveSensorData, generateCsvData, importCsvToDb, CSV_DIR } = require('./csvService');
+const {
+    generateAndSaveReport,
+    getReportFromDb,
+    getReportList,
+    getLatestReport,
+    initAutoGenerate,
+    generatePdf,
+    REPORT_DIR
+} = require('./dailyReportService');
 
 const app = express();
 const server = http.createServer(app);
@@ -407,6 +418,107 @@ app.put('/api/alarms/batch-handle', async (req, res) => {
     }
 });
 
+app.get('/api/daily-reports', async (req, res) => {
+    try {
+        const { page = 1, pageSize = 30 } = req.query;
+        const result = await getReportList(Number(page), Number(pageSize));
+        res.json({ code: 200, data: result });
+    } catch (err) {
+        console.error('获取日报列表失败:', err);
+        res.json({ code: 500, message: err.message });
+    }
+});
+
+app.get('/api/daily-reports/latest', async (req, res) => {
+    try {
+        const report = await getLatestReport();
+        if (!report) {
+            return res.json({ code: 404, message: '暂无日报数据' });
+        }
+        res.json({ code: 200, data: report });
+    } catch (err) {
+        console.error('获取最新日报失败:', err);
+        res.json({ code: 500, message: err.message });
+    }
+});
+
+app.get('/api/daily-reports/:date', async (req, res) => {
+    try {
+        const { date } = req.params;
+        const report = await getReportFromDb(date);
+        if (!report) {
+            return res.json({ code: 404, message: '该日期的日报不存在' });
+        }
+        res.json({ code: 200, data: report });
+    } catch (err) {
+        console.error('获取日报详情失败:', err);
+        res.json({ code: 500, message: err.message });
+    }
+});
+
+app.post('/api/daily-reports/generate', async (req, res) => {
+    try {
+        const { date } = req.body;
+        const targetDate = date || moment().subtract(1, 'days').format('YYYY-MM-DD');
+        
+        const existingReport = await getReportFromDb(targetDate);
+        const isRegenerate = !!existingReport;
+        
+        await generateAndSaveReport(targetDate, isRegenerate);
+        
+        const report = await getReportFromDb(targetDate);
+        
+        res.json({ 
+            code: 200, 
+            message: isRegenerate ? '日报重新生成成功' : '日报生成成功', 
+            data: report 
+        });
+    } catch (err) {
+        console.error('生成日报失败:', err);
+        res.json({ code: 500, message: err.message });
+    }
+});
+
+app.get('/api/daily-reports/:date/pdf', async (req, res) => {
+    try {
+        const { date } = req.params;
+        const fileName = `安全生产日报_${date}.pdf`;
+        const filePath = path.join(REPORT_DIR, fileName);
+        
+        if (!fs.existsSync(filePath)) {
+            const report = await getReportFromDb(date);
+            if (!report) {
+                return res.json({ code: 404, message: '该日期的日报不存在，请先生成' });
+            }
+            await generatePdf(report.report_data);
+        }
+        
+        const encodedFileName = encodeURIComponent(fileName);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodedFileName}`);
+        
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+    } catch (err) {
+        console.error('下载PDF失败:', err);
+        res.json({ code: 500, message: err.message });
+    }
+});
+
+app.get('/api/daily-reports/:date/preview', async (req, res) => {
+    try {
+        const { date } = req.params;
+        const report = await getReportFromDb(date);
+        if (!report) {
+            return res.json({ code: 404, message: '该日期的日报不存在' });
+        }
+        res.json({ code: 200, data: report.report_data });
+    } catch (err) {
+        console.error('预览日报失败:', err);
+        res.json({ code: 500, message: err.message });
+    }
+});
+
 wss.on('connection', (ws) => {
     console.log('WebSocket客户端已连接');
     
@@ -435,6 +547,8 @@ setInterval(async () => {
         console.error('实时数据推送错误:', err);
     }
 }, 5000);
+
+initAutoGenerate();
 
 const PORT = process.env.PORT || 3002;
 server.listen(PORT, () => {
