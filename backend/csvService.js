@@ -116,17 +116,27 @@ async function importCsvToDb(filePath) {
             .on('data', (row) => results.push(row))
             .on('end', async () => {
                 try {
+                    const [sensors] = await db.query('SELECT id, sensor_type, threshold FROM sensors');
+                    const sensorMap = {};
+                    sensors.forEach(s => {
+                        sensorMap[s.id] = parseFloat(s.threshold);
+                    });
+
                     const batchSize = 1000;
                     for (let i = 0; i < results.length; i += batchSize) {
                         const batch = results.slice(i, i + batchSize);
-                        const values = batch.map(r => [
-                            r.sensor_id,
-                            r.working_face_id,
-                            r.sensor_type,
-                            r.value,
-                            0,
-                            r.collect_time
-                        ]);
+                        const values = batch.map(r => {
+                            const threshold = sensorMap[r.sensor_id] || 0;
+                            const isOverLimit = parseFloat(r.value) > threshold ? 1 : 0;
+                            return [
+                                r.sensor_id,
+                                r.working_face_id,
+                                r.sensor_type,
+                                r.value,
+                                isOverLimit,
+                                r.collect_time
+                            ];
+                        });
                         
                         await db.query(
                             'INSERT IGNORE INTO sensor_data (sensor_id, working_face_id, sensor_type, value, is_over_limit, collect_time) VALUES ?',

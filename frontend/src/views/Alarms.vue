@@ -230,7 +230,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import axios from '../utils/request'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Check } from '@element-plus/icons-vue'
@@ -439,6 +439,13 @@ onMounted(async () => {
     await loadSummary()
     await loadAlarms()
     refreshTimer = setInterval(refreshData, 10000)
+})
+
+onUnmounted(() => {
+    if (refreshTimer) {
+        clearInterval(refreshTimer)
+        refreshTimer = null
+    }
 })
 </script>
 
