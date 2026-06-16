@@ -37,6 +37,7 @@ uploads/*
 # Temp
 tmp/
 temp/
+record.json
 
 # CSV data
 backend/csv_data/
