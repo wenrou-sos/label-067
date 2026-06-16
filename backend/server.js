@@ -264,7 +264,7 @@ setInterval(async () => {
     }
 }, 5000);
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3002;
 server.listen(PORT, () => {
     console.log(`矿山安全监测后端服务已启动: http://localhost:${PORT}`);
     console.log(`WebSocket服务已启动: ws://localhost:${PORT}`);

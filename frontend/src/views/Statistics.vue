@@ -246,7 +246,7 @@ const initChart = (el, option) => {
 
 const fetchWorkingFaces = async () => {
     try {
-        const res = await axios.get('/api/working-faces')
+        const res = await axios.get('/working-faces')
         if (res.code === 200) {
             workingFaces.value = res.data
         }
@@ -262,7 +262,7 @@ const loadShiftData = async () => {
         if (filters.sensorType) params.sensorType = filters.sensorType
         if (filters.date) params.date = filters.date
 
-        const res = await axios.get('/api/statistics/shift', { params })
+        const res = await axios.get('/statistics/shift', { params })
         if (res.code === 200) {
             shiftData.value = res.data
             await nextTick()
@@ -354,7 +354,7 @@ const loadDailyData = async () => {
             params.endDate = filters.dateRange[1]
         }
 
-        const res = await axios.get('/api/statistics/daily', { params })
+        const res = await axios.get('/statistics/daily', { params })
         if (res.code === 200) {
             await nextTick()
             renderDailyCharts(res.data)
@@ -445,7 +445,7 @@ const loadMonthlyData = async () => {
         if (filters.sensorType) params.sensorType = filters.sensorType
         if (filters.year) params.year = filters.year
 
-        const res = await axios.get('/api/statistics/monthly', { params })
+        const res = await axios.get('/statistics/monthly', { params })
         if (res.code === 200) {
             await nextTick()
             renderMonthlyCharts(res.data)
@@ -534,7 +534,7 @@ const loadYoYData = async () => {
         if (filters.workingFaceId) params.workingFaceId = filters.workingFaceId
         if (filters.sensorType) params.sensorType = filters.sensorType
 
-        const res = await axios.get('/api/statistics/year-over-year', { params })
+        const res = await axios.get('/statistics/year-over-year', { params })
         if (res.code === 200) {
             await nextTick()
             processYoYData(res.data)

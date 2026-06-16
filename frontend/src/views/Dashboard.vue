@@ -159,7 +159,7 @@ const getProgressWidth = (value, threshold) => {
 
 const fetchData = async () => {
     try {
-        const res = await axios.get('/api/realtime')
+        const res = await axios.get('/realtime')
         if (res.code === 200) {
             sensorData.value = res.data
             const now = new Date()
@@ -172,7 +172,7 @@ const fetchData = async () => {
 
 const fetchWorkingFaces = async () => {
     try {
-        const res = await axios.get('/api/working-faces')
+        const res = await axios.get('/working-faces')
         if (res.code === 200) {
             workingFaces.value = res.data
         }
@@ -184,7 +184,7 @@ const fetchWorkingFaces = async () => {
 const connectWebSocket = () => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.hostname
-    const wsUrl = `${protocol}//${host}:3000`
+    const wsUrl = `${protocol}//${host}:3002`
     ws = new WebSocket(wsUrl)
 
     ws.onmessage = (event) => {

@@ -83,7 +83,7 @@ npm install
 npm start
 ```
 
-后端服务将在 `http://localhost:3000` 启动，同时 WebSocket 服务也在同一端口运行。
+后端服务将在 `http://localhost:3002` 启动，同时 WebSocket 服务也在同一端口运行。
 
 ### 3. 生成模拟数据
 
@@ -91,10 +91,10 @@ npm start
 
 ```bash
 # 生成 CSV 模拟数据（生成过去7天约10万条数据）
-curl -X POST http://localhost:3000/api/generate-csv
+curl -X POST http://localhost:3002/api/generate-csv
 
 # 将 CSV 数据导入数据库
-curl -X POST http://localhost:3000/api/import-csv
+curl -X POST http://localhost:3002/api/import-csv
 ```
 
 也可以直接在浏览器中访问或使用 Postman 调用。
