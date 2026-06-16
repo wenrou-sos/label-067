@@ -35,6 +35,7 @@ const calculateConclusion = (workingFacesData) => {
     let totalOverLimit = 0;
     let maxOverLimit = 0;
     let hasGasOverLimit = false;
+    let gasOverLimitCount = 0;
 
     workingFacesData.forEach(face => {
         face.sensorStats.forEach(stat => {
@@ -44,13 +45,14 @@ const calculateConclusion = (workingFacesData) => {
             }
             if (stat.sensorType === 'gas' && stat.overLimitCount > 0) {
                 hasGasOverLimit = true;
+                gasOverLimitCount += stat.overLimitCount;
             }
         });
     });
 
-    if (hasGasOverLimit || maxOverLimit >= 10 || totalOverLimit >= 20) {
+    if (gasOverLimitCount >= 80 || maxOverLimit >= 180 || totalOverLimit >= 750) {
         return '异常';
-    } else if (maxOverLimit >= 5 || totalOverLimit >= 10) {
+    } else if (gasOverLimitCount >= 30 || maxOverLimit >= 100 || totalOverLimit >= 400) {
         return '重点关注';
     } else {
         return '正常';
@@ -220,6 +222,12 @@ const getReportList = async (page = 1, pageSize = 30) => {
     };
 };
 
+const FONT_PATH = path.join(__dirname, 'fonts', 'simhei.ttf');
+
+const getSimHeiFontBuffer = () => {
+    return fs.readFileSync(FONT_PATH);
+};
+
 const generatePdf = async (reportData) => {
     return new Promise((resolve, reject) => {
         const doc = new PDFDocument({ size: 'A4', margin: 50 });
@@ -227,12 +235,14 @@ const generatePdf = async (reportData) => {
         const filePath = path.join(REPORT_DIR, fileName);
         const stream = fs.createWriteStream(filePath);
 
+        const fontBuffer = getSimHeiFontBuffer();
+        doc.registerFont('SimHei', fontBuffer);
         doc.pipe(stream);
 
-        doc.fontSize(20).fillColor('#1a3a5c').text('矿山安全生产日报', { align: 'center' });
+        doc.font('SimHei').fontSize(20).fillColor('#1a3a5c').text('矿山安全生产日报', { align: 'center' });
         doc.moveDown(0.5);
-        doc.fontSize(12).fillColor('#666').text(`报告日期：${reportData.reportDate}`, { align: 'center' });
-        doc.fontSize(10).fillColor('#999').text(`生成时间：${reportData.generatedAt}`, { align: 'center' });
+        doc.font('SimHei').fontSize(12).fillColor('#666').text(`报告日期：${reportData.reportDate}`, { align: 'center' });
+        doc.font('SimHei').fontSize(10).fillColor('#999').text(`生成时间：${reportData.generatedAt}`, { align: 'center' });
         doc.moveDown(1);
 
         doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#1a3a5c').stroke();
@@ -242,9 +252,9 @@ const generatePdf = async (reportData) => {
         if (reportData.conclusion === '重点关注') conclusionColor = '#faad14';
         if (reportData.conclusion === '异常') conclusionColor = '#ff4d4f';
 
-        doc.fontSize(14).fillColor('#333').text('安全评估结论：', { continued: true });
-        doc.fillColor(conclusionColor).fontSize(16).text(reportData.conclusion, { continued: true });
-        doc.fillColor('#666').fontSize(10).text(`   （对比上周同期）`);
+        doc.font('SimHei').fontSize(14).fillColor('#333').text('安全评估结论：', { continued: true });
+        doc.font('SimHei').fillColor(conclusionColor).fontSize(16).text(reportData.conclusion, { continued: true });
+        doc.font('SimHei').fillColor('#666').fontSize(10).text('   （对比上周同期）');
         doc.moveDown(1.5);
 
         reportData.workingFaces.forEach((face, faceIndex) => {
@@ -252,48 +262,47 @@ const generatePdf = async (reportData) => {
                 doc.addPage();
             }
 
-            doc.fontSize(13).fillColor('#1a3a5c').text(`▌ ${face.workingFaceName}`);
-            doc.fontSize(9).fillColor('#999').text(`位置：${face.location}`);
+            doc.font('SimHei').fontSize(13).fillColor('#1a3a5c').text(`▌ ${face.workingFaceName}`);
+            doc.font('SimHei').fontSize(9).fillColor('#999').text(`位置：${face.location}`);
             doc.moveDown(0.5);
 
             const tableTop = doc.y;
-            const colWidths = [110, 70, 70, 70, 90, 90];
             const colX = [50, 160, 230, 300, 370, 460];
 
-            doc.fontSize(9).fillColor('#fff');
+            doc.font('SimHei').fontSize(9).fillColor('#fff');
             doc.rect(50, tableTop, 500, 25).fill('#1a3a5c');
-            doc.text('监测类型', colX[0] + 5, tableTop + 7);
-            doc.text('超限次数', colX[1] + 5, tableTop + 7);
-            doc.text('最高值', colX[2] + 5, tableTop + 7);
-            doc.text('平均值', colX[3] + 5, tableTop + 7);
-            doc.text('同比上周(超限)', colX[4] + 5, tableTop + 7);
-            doc.text('同比上周(均值)', colX[5] + 5, tableTop + 7);
+            doc.font('SimHei').text('监测类型', colX[0] + 5, tableTop + 7);
+            doc.font('SimHei').text('超限次数', colX[1] + 5, tableTop + 7);
+            doc.font('SimHei').text('最高值', colX[2] + 5, tableTop + 7);
+            doc.font('SimHei').text('平均值', colX[3] + 5, tableTop + 7);
+            doc.font('SimHei').text('同比上周(超限)', colX[4] + 5, tableTop + 7);
+            doc.font('SimHei').text('同比上周(均值)', colX[5] + 5, tableTop + 7);
 
             let currentY = tableTop + 25;
 
-            face.sensorStats.forEach((stat, statIndex) => {
-                const isEven = statIndex % 2 === 0;
+            face.sensorStats.forEach((stat) => {
+                const isEven = face.sensorStats.indexOf(stat) % 2 === 0;
                 if (isEven) {
                     doc.rect(50, currentY, 500, 22).fill('#f5f9ff');
                 }
 
-                doc.fillColor('#333').fontSize(9);
+                doc.font('SimHei').fillColor('#333').fontSize(9);
                 doc.text(stat.sensorLabel, colX[0] + 5, currentY + 6);
 
                 const overLimitColor = stat.overLimitCount > 0 ? '#ff4d4f' : '#52c41a';
-                doc.fillColor(overLimitColor).text(stat.overLimitCount.toString(), colX[1] + 5, currentY + 6);
+                doc.font('SimHei').fillColor(overLimitColor).text(stat.overLimitCount.toString(), colX[1] + 5, currentY + 6);
 
-                doc.fillColor('#333').text(`${stat.maxValue.toFixed(4)} ${stat.unit}`, colX[2] + 5, currentY + 6);
-                doc.text(`${stat.avgValue.toFixed(4)} ${stat.unit}`, colX[3] + 5, currentY + 6);
+                doc.font('SimHei').fillColor('#333').text(`${stat.maxValue.toFixed(4)} ${stat.unit}`, colX[2] + 5, currentY + 6);
+                doc.font('SimHei').text(`${stat.avgValue.toFixed(4)} ${stat.unit}`, colX[3] + 5, currentY + 6);
 
                 const overLimitChangeColor = stat.changes.overLimit > 0 ? '#ff4d4f' : (stat.changes.overLimit < 0 ? '#52c41a' : '#666');
-                doc.fillColor(overLimitChangeColor).text(
-                    `${stat.changes.overLimit > 0 ? '+' : ''}${stat.changes.overLimit}% (${stat.lastWeek.overLimitCount}→${stat.overLimitCount})`,
+                doc.font('SimHei').fillColor(overLimitChangeColor).text(
+                    `${stat.changes.overLimit > 0 ? '+' : ''}${stat.changes.overLimit}% (${stat.lastWeek.overLimitCount}->${stat.overLimitCount})`,
                     colX[4] + 5, currentY + 6
                 );
 
                 const avgChangeColor = stat.changes.avg > 0 ? '#ff4d4f' : (stat.changes.avg < 0 ? '#52c41a' : '#666');
-                doc.fillColor(avgChangeColor).text(
+                doc.font('SimHei').fillColor(avgChangeColor).text(
                     `${stat.changes.avg > 0 ? '+' : ''}${stat.changes.avg}%`,
                     colX[5] + 5, currentY + 6
                 );
@@ -301,7 +310,7 @@ const generatePdf = async (reportData) => {
                 currentY += 22;
             });
 
-            doc.moveDown(1);
+            doc.y = currentY + 10;
         });
 
         if (doc.y > 700) {
@@ -311,7 +320,7 @@ const generatePdf = async (reportData) => {
         doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#1a3a5c').stroke();
         doc.moveDown(1);
 
-        doc.fontSize(11).fillColor('#333').text('结论说明：');
+        doc.font('SimHei').fontSize(11).fillColor('#333').text('结论说明：');
         doc.moveDown(0.5);
 
         let conclusionText = '';
@@ -323,7 +332,7 @@ const generatePdf = async (reportData) => {
             conclusionText = '存在严重超限情况或瓦斯超限，安全生产状况异常！请立即启动应急预案，组织相关人员排查隐患，确保生产安全。';
         }
 
-        doc.fontSize(10).fillColor('#666').text(conclusionText);
+        doc.font('SimHei').fontSize(10).fillColor('#666').text(conclusionText);
 
         doc.end();
 
