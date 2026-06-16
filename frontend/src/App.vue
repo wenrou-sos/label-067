@@ -21,6 +21,9 @@
                         {{ unhandledAlarmCount > 99 ? '99+' : unhandledAlarmCount }}
                     </span>
                 </router-link>
+                <router-link to="/big-screen" class="nav-item big-screen-nav" active-class="active">
+                    <span class="nav-icon">🖥</span>大屏模式
+                </router-link>
             </nav>
             <div class="header-right">
                 <span class="current-time">{{ currentTime }}</span>
@@ -207,5 +210,18 @@ body {
 @keyframes badgePulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.1); }
+}
+
+body.big-screen-mode .app-header {
+    display: none;
+}
+
+body.big-screen-mode .app-main {
+    padding: 0;
+    overflow: hidden;
+}
+
+body.big-screen-mode {
+    overflow: hidden;
 }
 </style>

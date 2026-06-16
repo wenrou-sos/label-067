@@ -1,6 +1,13 @@
 <template>
     <div class="dashboard">
         <div class="dashboard-header">
+            <div class="dashboard-header-top">
+                <h2 class="dashboard-title">实时监测看板</h2>
+                <router-link to="/big-screen" class="big-screen-btn">
+                    <span>🖥</span>
+                    <span>进入大屏模式</span>
+                </router-link>
+            </div>
             <div class="stat-cards">
                 <div class="stat-card normal">
                     <div class="stat-icon">✅</div>
@@ -226,6 +233,41 @@ onUnmounted(() => {
 <style scoped>
 .dashboard {
     width: 100%;
+}
+
+.dashboard-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.dashboard-title {
+    font-size: 22px;
+    color: #fff;
+    font-weight: 600;
+}
+
+.big-screen-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #1a3a5c 0%, #0d2137 100%);
+    border: 1px solid rgba(0, 212, 255, 0.4);
+    color: #00d4ff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.big-screen-btn:hover {
+    background: rgba(0, 212, 255, 0.15);
+    border-color: #00d4ff;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    transform: translateY(-1px);
 }
 
 .dashboard-header {
