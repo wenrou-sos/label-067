@@ -47,12 +47,12 @@
         </div>
 
         <div class="filter-bar">
-            <el-select v-model="filters.workingFaceId" placeholder="选择工作面" clearable @change="loadAlarms">
+            <el-select v-model="filters.workingFaceId" placeholder="选择工作面" clearable @change="handleSearch">
                 <el-option label="全部工作面" value="" />
                 <el-option v-for="face in workingFaces" :key="face.id" :label="face.name" :value="face.id" />
             </el-select>
 
-            <el-select v-model="filters.sensorType" placeholder="选择报警类型" clearable @change="loadAlarms">
+            <el-select v-model="filters.sensorType" placeholder="选择报警类型" clearable @change="handleSearch">
                 <el-option label="全部类型" value="" />
                 <el-option label="瓦斯浓度" value="gas" />
                 <el-option label="粉尘浓度" value="dust" />
@@ -60,7 +60,7 @@
                 <el-option label="风速" value="wind" />
             </el-select>
 
-            <el-select v-model="filters.status" placeholder="处理状态" clearable @change="loadAlarms">
+            <el-select v-model="filters.status" placeholder="处理状态" clearable @change="handleSearch">
                 <el-option label="全部状态" value="" />
                 <el-option label="未处理" :value="0" />
                 <el-option label="已处理" :value="1" />
@@ -74,10 +74,10 @@
                 end-placeholder="结束时间"
                 format="YYYY-MM-DD HH:mm"
                 value-format="YYYY-MM-DD HH:mm:ss"
-                @change="loadAlarms"
+                @change="handleSearch"
             />
 
-            <el-button type="primary" @click="loadAlarms">
+            <el-button type="primary" @click="handleSearch">
                 <el-icon><Search /></el-icon>查询
             </el-button>
 
@@ -188,7 +188,7 @@
                     :page-sizes="[10, 20, 50, 100]"
                     :total="pagination.total"
                     layout="total, sizes, prev, pager, next, jumper"
-                    @size-change="loadAlarms"
+                    @size-change="handlePageSizeChange"
                     @current-change="loadAlarms"
                     background
                 />
@@ -333,11 +333,26 @@ const loadAlarms = async () => {
         if (res.code === 200) {
             alarmList.value = res.data.list
             pagination.total = res.data.total
-            pagination.page = res.data.page
+            if (res.data.list.length === 0 && pagination.page > 1 && pagination.total > 0) {
+                pagination.page = 1
+                loadAlarms()
+                return
+            }
         }
     } catch (err) {
         console.error(err)
     }
+}
+
+const handleSearch = () => {
+    pagination.page = 1
+    loadAlarms()
+}
+
+const handlePageSizeChange = (size) => {
+    pagination.pageSize = size
+    pagination.page = 1
+    loadAlarms()
 }
 
 const resetFilters = () => {
